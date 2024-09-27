@@ -165,7 +165,7 @@ def get_db():    # Função get_db() fornece uma sessão de banco de dados com S
 #Criação de um novo aluno (id será gerado automaticamente)
 @app.post("/alunos/", response_model=Aluno)
 def create_aluno(aluno: Aluno, db: Session = Depends(get_db)):
-    db_aluno = AlunoDB(nome=aluno.nome, email=aluno.email)  # id não é mais necessário
+    db_aluno = AlunoDB(nome=aluno.nome, email=aluno.email) 
     db.add(db_aluno)
     db.commit()
     db.refresh(db_aluno)
