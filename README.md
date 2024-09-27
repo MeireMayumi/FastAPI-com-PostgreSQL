@@ -34,7 +34,7 @@ pip install fastapi[all] python-dotenv sqlalchemy psycopg2
 
 ### Configuração do Banco de Dados
 
-Criar um arquivo para o banco de dados `db.py`:
+Criar um arquivo para o banco de dados [db.py](https://github.com/MeireMayumi/FastAPI-com-PostgreSQL/blob/main/db.py):
 
 ```ruby
 #Importar os módulos de SQLAlchemy
@@ -115,7 +115,7 @@ A API inclui os seguintes endpoints para gerenciar registros de alunos:
 </details>
 
 ### Código
-
+- Criar um arquivo [main.py](https://github.com/MeireMayumi/FastAPI-com-PostgreSQL/blob/main/main.py):
 ```ruby
 from fastapi import Depends, FastAPI, HTTPException
 from sqlalchemy.orm import Session
