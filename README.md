@@ -97,7 +97,7 @@ A API inclui os seguintes endpoints para gerenciar registros de alunos:
   **Resposta**: Objeto `Aluno`.
 </details>
 <details>
-<summary>Rota': PUT/alunos/{aluno_id}</summary>
+<summary>Rota: PUT/alunos/{aluno_id}</summary>
   
   **Descrição**: Atualiza os dados de um aluno existente.
 
