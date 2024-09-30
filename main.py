@@ -25,6 +25,7 @@ Base.metadata.create_all(bind=engine)
 
 # Esquema Pydantic para validação de dados do aluno
 class Aluno(BaseModel):
+    id: int | None = None
     nome: str
     email: str
 
