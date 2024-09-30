@@ -146,6 +146,7 @@ Base.metadata.create_all(bind=engine)
 
 #Esquema Pydantic que define como os dados do aluno serão validados
 class Aluno(BaseModel):
+    id: int | None = None
     nome: str
     email: str
 #Permite mapear dados do SQLAlchemy para este esquema
