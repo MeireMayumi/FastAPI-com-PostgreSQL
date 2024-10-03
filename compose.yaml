@@ -1,7 +1,7 @@
 version: '3.8'
 services:
   db:
-    image: postgres
+    image: cgr.dev/chainguard/postgres:latest
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}

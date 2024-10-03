@@ -1,12 +1,29 @@
-FROM python:3.12
+# Usar a imagem base do Python
+FROM python:3.12-alpine
 
-RUN apt-get update && apt-get install -y netcat-openbsd
+# Criar um novo usuário
+RUN adduser -D fastapi
 
+# Criar area de trabalho dentro do container /app
 WORKDIR /app
 
+#Copiar o arquivo de requisitos
 COPY requirements.txt requirements.txt
-RUN pip install -r requirements.txt
 
+# Instalar dependências
+RUN apk add --no-cache gcc musl-dev postgresql-dev netcat-openbsd bash
+
+# Instalar dependências do Python 
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copiar todos o arquivos da aplicação
 COPY . . 
 
+# Trocar para o novo usuário
+USER fastapi
+
+# Adicionar um health check
+HEALTHCHECK CMD curl --fail http://localhost:8000/ || exit 1
+
+# Comando para executar a aplicação
 CMD ["./wait-for-it.sh", "db", "--", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
