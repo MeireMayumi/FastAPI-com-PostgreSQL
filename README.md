@@ -1,72 +1,27 @@
-# FastAPI com PostgreSQL
+# FastAPI com PostgreSQL no Docker
 
-Esta API permite a execução das quatro operações básicas **CRUD** (Create, Read, Update e Delete) para o gerenciamento de informações de alunos, utilizando o framework **FastAPI** integrado ao banco de dados **PostgreSQL** através do **SQLAlchemy**. O código foi desenvolvido em **Python**.
+Esta API permite a execução das quatro operações básicas **CRUD** (Create, Read, Update e Delete) para o gerenciamento de informações de alunos, utilizando o framework **FastAPI** integrado ao banco de dados **PostgreSQL** através do **SQLAlchemy**. O código foi desenvolvido em **Python** e a aplicação foi containerizada pelo **Docker**.
 
 ## Sumário
 
 - [Pré-requisitos](#pré-requisitos)
-- [Instalação](#instalação)
 - [Configuração do Banco de Dados](#configuração-do-banco-de-dados)
 - [Endpoints Disponíveis](#endpoints-disponíveis)
 - [Código](#código)
+- [Docker](#docker)
 - [Teste](#testando-a-api)
 
 ### Pré-requisitos
 
-- Ambiente Virtual ativado
-
-```
- python -m venv venv*
- venv*\Scripts\activate
-``` 
-- Execução do aplicativo no ambiente virtual:
-```
-uvicorn main:app --reload
-``` 
 - Python
 - PostgreSQL
-
-### Instalação
-
-```
-pip install fastapi[all] python-dotenv sqlalchemy psycopg2
-```
+- Rancher Desktop
 
 ### Configuração do Banco de Dados
 
-Criar um arquivo para o banco de dados [db.py](https://github.com/MeireMayumi/FastAPI-com-PostgreSQL/blob/main/db.py):
+Crie um arquivo [db.py](https://github.com/MeireMayumi/FastAPI-com-PostgreSQL/blob/main/db.py) que define a conexão com o banco de dados, a criação da sessão e a base para os modelos ORM.
 
-```ruby
-#Importar os módulos de SQLAlchemy
-from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
-
-#Módulo utilizado para carregar as variáveis de ambiente
-from dotenv import load_dotenv
-import os
-
-#Carrega as variáveis do arquivo .env
-load_dotenv()
-
-#Recupera a URL do banco de dados da variável de ambiente
-SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL")
-
-#Cria uma engine do  SQLAlchemy para se conectar ao banco de dados
-engine = create_engine(SQLALCHEMY_DATABASE_URL)
-
-#Cria uma sessão que será usada para interagir com o banco de dados
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-#Base utilizada para as classes de modelo ORM
-Base = declarative_base()
-```
-
-Para não expor os dados sensíveis no arquivo do banco de dados, será criado um arquivo `.env` com a URL de conexão do SQLAlchemy:
-
-```
-DATABASE_URL=postgresql://<usuario>:<senha>@<localhost>/<nome-do-banco>
-```
+Para não expor os dados sensíveis no arquivo do banco de dados e no docker-compose, crie o arquivo [.env](https://github.com/MeireMayumi/FastAPI-com-PostgreSQL/blob/main/.env).
 
 ### Endpoints disponíveis
 
@@ -115,100 +70,26 @@ A API inclui os seguintes endpoints para gerenciar registros de alunos:
 </details>
 
 ### Código
-- Criar um arquivo [main.py](https://github.com/MeireMayumi/FastAPI-com-PostgreSQL/blob/main/main.py):
-```ruby
-from fastapi import Depends, FastAPI, HTTPException
-from sqlalchemy.orm import Session
-from pydantic import BaseModel
-from sqlalchemy import Column, Integer, String
-from dotenv import load_dotenv
-import os
 
-from db import SessionLocal, engine, Base, SQLALCHEMY_DATABASE_URL
-
-#Carrega as variáveis do arquivo .env
-load_dotenv()
-
-#Criação da instância da Aplicação FastAPI
-app = FastAPI()
-
-#Modelo que define a tabela alunos
-class AlunoDB(Base):
-    __tablename__ = "alunos"
-
-    id = Column(Integer, primary_key=True, autoincrement=True)  # id autoincrementado
-    nome = Column(String, index=True)
-    email = Column(String, unique=True, index=True)
-
-#Cria a tabela alunos no banco de dados, caso ela não exista
-Base.metadata.create_all(bind=engine)
+Crie um arquivo [main.py](https://github.com/MeireMayumi/FastAPI-com-PostgreSQL/blob/main/main.py) que contém o código para implementar a aplicação FastAPI, que gerencia as operações CRUD para o gerenciamento de alunos. 
 
 
-#Esquema Pydantic que define como os dados do aluno serão validados
-class Aluno(BaseModel):
-    id: int | None = None
-    nome: str
-    email: str
-#Permite mapear dados do SQLAlchemy para este esquema
-    class Config:
-        from_attributes = True  
+### Docker
 
+Para automatizar o processo de construção e execução da imagem do contêiner, crie o arquivo [Dockerfile](https://github.com/MeireMayumi/FastAPI-com-PostgreSQL/blob/main/Dockerfile), que contém as instruções necessárias para configurar o ambiente, instalar as dependências e construir a imagem.
 
-#Dependencia para acessar o banco de dados
-def get_db():    # Função get_db() fornece uma sessão de banco de dados com SessionLocal, que foi definido no arquivo db.py
-    db = SessionLocal() 
-    try:
-        yield db
-    finally:
-        db.close()
+Para simplificar a execução de múltiplos contêineres com um único comando, crie o arquivo [compose.yaml](https://github.com/MeireMayumi/FastAPI-com-PostgreSQL/blob/main/compose.yaml), que permite definir e configurar serviços, redes e volumes.
 
+Para facilitar o gerenciamento das dependências do projeto, crie o arquivo [requirements.txt](https://github.com/MeireMayumi/FastAPI-com-PostgreSQL/blob/main/requirements.txt), que lista todas as bibliotecas e suas versões necessárias.
 
-#Criação de um novo aluno (id será gerado automaticamente)
-@app.post("/alunos/", response_model=Aluno)
-def create_aluno(aluno: Aluno, db: Session = Depends(get_db)):
-    db_aluno = AlunoDB(nome=aluno.nome, email=aluno.email) 
-    db.add(db_aluno)
-    db.commit()
-    db.refresh(db_aluno)
-    return Aluno.from_orm(db_aluno)
+Para garantir que a aplicação inicie somente depois que o banco de dados estiver pronto, foi criado o arquivo [wait-for-it.sh](https://github.com/MeireMayumi/FastAPI-com-PostgreSQL/blob/main/wait-for-it.sh).
 
-#Leitura de todos os alunos
-@app.get("/alunos/", response_model=list[Aluno])
-def read_alunos(db: Session = Depends(get_db)):
-    return db.query(AlunoDB).all()
-
-#Leitura de um aluno específico, baseado no id fornecido
-@app.get("/alunos/{aluno_id}", response_model=Aluno)
-def read_aluno(aluno_id: int, db: Session = Depends(get_db)):
-    aluno = db.query(AlunoDB).filter(AlunoDB.id == aluno_id).first()
-    if aluno is None:
-        raise HTTPException(status_code=404, detail="Aluno não encontrado")
-    return Aluno.from_orm(aluno)
-
-#Atualização de informações um aluno exustente
-@app.put("/alunos/{aluno_id}", response_model=Aluno)
-def update_aluno(aluno_id: int, aluno_update: Aluno, db: Session = Depends(get_db)):
-    aluno = db.query(AlunoDB).filter(AlunoDB.id == aluno_id).first()
-    if aluno is None:
-        raise HTTPException(status_code=404, detail="Aluno não encontrado")
-    aluno.nome = aluno_update.nome
-    aluno.email = aluno_update.email
-    db.commit()
-    db.refresh(aluno)
-    return Aluno.from_orm(aluno)
-
-#Exclusão de um aluno baseado no id fornecido 
-@app.delete("/alunos/{aluno_id}", response_model=Aluno)
-def delete_aluno(aluno_id: int, db: Session = Depends(get_db)):
-    aluno = db.query(AlunoDB).filter(AlunoDB.id == aluno_id).first()
-    if aluno is None:
-        raise HTTPException(status_code=404, detail="Aluno não encontrado")
-    db.delete(aluno)
-    db.commit()
-    return Aluno.from_orm(aluno)
+Para criar e inicializar os contêineres, certifique-se de estar no diretório raiz em que o arquivo compose.yaml se encontra e executar o seguinte comando:
 ```
-
-
+docker-compose up
+```
 ### Testando a API
 
-Swagger UI: http://127.0.0.1:8000/docs
+Swagger UI: http://localhost:8000/docs
+
+pgAdmin4: http://localhost:8080
