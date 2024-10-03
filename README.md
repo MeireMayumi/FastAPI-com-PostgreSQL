@@ -88,6 +88,12 @@ Para criar e inicializar os contêineres, certifique-se de estar no diretório r
 ```
 docker-compose up
 ```
+
+Para rodar o contêiner em segundo plano, sem bloquear o terminal que iniciou a execução:
+```
+docker-compose up -d
+```
+
 ### Testando a API
 
 Swagger UI: http://localhost:8000/docs
