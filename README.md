@@ -21,7 +21,7 @@ Esta API permite a execução das quatro operações básicas **CRUD** (Create, 
 
 Crie um arquivo [db.py](https://github.com/MeireMayumi/FastAPI-com-PostgreSQL/blob/main/db.py) que define a conexão com o banco de dados, a criação da sessão e a base para os modelos ORM.
 
-Para evitar a exposição de dados sensíveis no código-fonte, como credenciais de banco de dados ou configurações no compose.yaml, crie um arquivo [.env](https://github.com/MeireMayumi/FastAPI-com-PostgreSQL/blob/main/.env) que armazene essas informações em variáveis de ambiente.
+Para evitar a exposição de dados sensíveis no código-fonte, como credenciais de banco de dados ou configurações no compose.yaml, crie um arquivo [.env](https://github.com/MeireMayumi/FastAPI-com-PostgreSQL/blob/main/exemplo%20.env) que armazene essas informações em variáveis de ambiente.
 
 ### Endpoints disponíveis
 
