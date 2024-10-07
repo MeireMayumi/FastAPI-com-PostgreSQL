@@ -26,7 +26,8 @@ jobs:
 
     - name: Tag da imagem Docker
       run: |
-        docker tag mmayumi/fastapi-app:latest mmayumi/fastapi-app:v${{ github.run_number }}
+        docker tag fastapi-com-postgresql_fastapi:latest mmayumi/fastapi-app:latest
+        docker tag fastapi-com-postgresql_fastapi:latest mmayumi/fastapi-app:v${{ github.run_number }}
 
     - name: Enviar imagem Docker
       run: |
