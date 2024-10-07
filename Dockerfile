@@ -19,6 +19,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copiar todos o arquivos da aplicação
 COPY . . 
 
+# Dar permissão de execução ao script wait-for-it.sh
+RUN chmod +x wait-for-it.sh
+
 # Trocar para o novo usuário
 USER fastapi
 
