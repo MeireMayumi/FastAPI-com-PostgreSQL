@@ -45,6 +45,7 @@ jobs:
       uses: github/codeql-action/upload-sarif@v3
       with:
         sarif_file: 'trivy-results.sarif'
+        token: ${{ secrets.MY_GITHUB_TOKEN }}
         
     - name: Fazer logout do Docker Hub
       run: docker logout
