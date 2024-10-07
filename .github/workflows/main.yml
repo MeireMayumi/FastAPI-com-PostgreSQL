@@ -16,6 +16,11 @@ jobs:
     - name: Fazer login no Docker Hub
       run: echo "${{ secrets.DOCKER_HUB_PASSWD }}" | docker login -u ${{ secrets.DOCKER_HUB_USER }} --password-stdin
 
+    - name: Instalar Docker Compose
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y docker-compose
+        
     - name: Construir imagem Docker
       run: docker-compose build
 
