@@ -34,7 +34,7 @@ jobs:
         docker push mmayumi/fastapi-app:latest
         docker push mmayumi/fastapi-app:v${{ github.run_number }}
 
-    - name: Executar Trivy Vulnerability Scanner
+    - name: Escanear vulnerabilidades com Trivy
       uses: aquasecurity/trivy-action@0.20.0
       with:
         image-ref: 'docker.io/mmayumi/fastapi-app:v${{ github.run_number }}'
@@ -42,10 +42,10 @@ jobs:
         output: 'trivy-results.sarif'
         
     - name: Enviar resultados do Trivy para a aba de Segurança do Github
-      uses: github/codeql-action/upload-sarif@v3
+      uses: actions/upload-artifact@v4
       with:
-        sarif_file: 'trivy-results.sarif'
-        token: ${{ secrets.MY_GITHUB_TOKEN }}
+        name: trivy-results
+        path: trivy-results.sarif
         
     - name: Fazer logout do Docker Hub
       run: docker logout
