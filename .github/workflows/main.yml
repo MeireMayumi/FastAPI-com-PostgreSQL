@@ -33,6 +33,7 @@ jobs:
           image-ref: 'docker.io/mmayumi/fastapi-app:v${{ github.run_number }}'
           format: 'sarif'
           output: 'trivy-results.sarif'
+          exit-code: true 
         
       - name: Enviar resultados do Trivy para a aba de Segurança do Github
         uses: actions/upload-artifact@v4
