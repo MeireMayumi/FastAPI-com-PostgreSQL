@@ -16,14 +16,36 @@ jobs:
     - name: Fazer login no Docker Hub
       run: echo "${{ secrets.DOCKER_HUB_PASSWD }}" | docker login -u ${{ secrets.DOCKER_HUB_USER }} --password-stdin
 
+    - name: Instalar Docker Compose
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y docker-compose
+        
     - name: Construir imagem Docker
-      run: docker build . -t mmayumi/fastapi-app:latest
+      run: docker-compose build
+
+    - name: Tag da imagem Docker
+      run: |
+        docker tag fastapi-com-postgresql_fastapi:latest mmayumi/fastapi-app:latest
+        docker tag fastapi-com-postgresql_fastapi:latest mmayumi/fastapi-app:v${{ github.run_number }}
 
     - name: Enviar imagem Docker
-      run: docker push mmayumi/fastapi-app:latest
+      run: |
+        docker push mmayumi/fastapi-app:latest
+        docker push mmayumi/fastapi-app:v${{ github.run_number }}
 
+    - name: Escanear vulnerabilidades com Trivy
+      uses: aquasecurity/trivy-action@0.20.0
+      with:
+        image-ref: 'docker.io/mmayumi/fastapi-app:v${{ github.run_number }}'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+        
+    - name: Enviar resultados do Trivy para a aba de Segurança do Github
+      uses: actions/upload-artifact@v4
+      with:
+        name: trivy-results
+        path: trivy-results.sarif
+        
     - name: Fazer logout do Docker Hub
       run: docker logout
-
-    - name: Término
-      run: echo "Imagem enviada ao Docker Hub com sucesso"
