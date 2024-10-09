@@ -27,8 +27,6 @@ jobs:
        docker save mmayumi/fastapi-app:latest -o app-latest.tar
        docker save mmayumi/fastapi-app:v${{ github.run_number }} -o app-v${{ github.run_number }}.tar
 
-      
-      # Envia o arquivo `tag.txt` como artefato para ser usado em outros jobs
     - name: Enviar as imagens como artefato 
       uses: actions/upload-artifact@v3
       with:
@@ -36,12 +34,6 @@ jobs:
         path: |
           app-latest.tar
           app-v${{ github.run_number }}.tar
-
-      
-   # - name: Enviar imagem Docker
-   #   run: |
-   #     docker push mmayumi/fastapi-app:v${{ github.run_number }}
-   #     docker push mmayumi/fastapi-app:latest
         
   scan-image:
     runs-on: ubuntu-latest
