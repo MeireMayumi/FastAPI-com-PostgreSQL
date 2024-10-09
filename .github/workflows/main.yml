@@ -22,17 +22,21 @@ jobs:
     - name: Tag da imagem Docker com número de execução do GitHub
       run: docker tag mmayumi/fastapi-app:latest mmayumi/fastapi-app:v${{ github.run_number }}
 
-    - name: Salvar as tag como artefato
+    - name: Salvar a imagem como artefato
       run: |
-       echo "TAG=mmayumi/fastapi-app:v${{ github.run_number }}" > tag.txt
-       echo "TAG_LATEST=mmayumi/fastapi-app:latest" >> tag.txt
+       docker save mmayumi/fastapi-app:latest -o app-latest.tar
+       docker save mmayumi/fastapi-app:v${{ github.run_number }} -o app-v${{ github.run_number }}.tar
+
       
       # Envia o arquivo `tag.txt` como artefato para ser usado em outros jobs
-    - name: Enviar as tags como artefato 
+    - name: Enviar as imagens como artefato 
       uses: actions/upload-artifact@v3
       with:
-        name: image-tag
-        path: tag.txt
+        name: imagem-docker
+        path: |
+          app-latest.tar
+          app-v${{ github.run_number }}.tar
+
       
    # - name: Enviar imagem Docker
    #   run: |
@@ -45,16 +49,16 @@ jobs:
 
     steps:
 
-      - name: Baixar a tag da imagem
+      - name: Baixar as imagens
         uses: actions/download-artifact@v3
         with:
-          name: image-tag
+          name: imagem-docker
           path: ./  
 
-      - name: Ler a tag da imagem
+      - name: Carregar as imagens
         run: |
-          IMAGE_TAG=$(cat tag.txt)
-          echo "Escaneando a imagem $IMAGE_TAG com Trivy"
+          docker load -i app-latest.tar
+          docker load -i app-v${{ github.run_number }}.tar
           
       - name: Escanear vulnerabilidades com Trivy
         uses: aquasecurity/trivy-action@0.20.0
@@ -82,17 +86,17 @@ jobs:
       - name: Fazer login no Docker Hub
         run: echo "${{ secrets.DOCKER_HUB_PASSWD }}" | docker login -u ${{ secrets.DOCKER_HUB_USER }} --password-stdin
 
-      - name: Baixar a tag da imagem
+      - name: Baixar as imagens
         uses: actions/download-artifact@v3
         with:
-          name: image-tag
+          name: imagem-docker
           path: ./ 
       
-      - name: Ler a tag da imagem
+      - name: Carregar as imagens
         run: |
-          IMAGE_TAG=$(cat tag.txt)
-          echo "Enviando a imagem $IMAGE_TAG e latest para o Docker Hub"
-      
+          docker load -i app-latest.tar
+          docker load -i app-v${{ github.run_number }}.tar
+          
       - name: Enviar imagem Docker
         run: |
           docker push mmayumi/fastapi-app:latest
