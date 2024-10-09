@@ -21,7 +21,10 @@ jobs:
 
     - name: Tag da imagem Docker com número de execução do GitHub
       run: docker tag mmayumi/fastapi-app:latest mmayumi/fastapi-app:v${{ github.run_number }}
-
+      
+    - name: Enviar imagem Docker
+      run: docker push mmayumi/fastapi-app:v${{ github.run_number }}
+        
   scan-image:
     runs-on: ubuntu-latest
     needs: build
@@ -33,6 +36,10 @@ jobs:
           image-ref: 'docker.io/mmayumi/fastapi-app:v${{ github.run_number }}'
           format: 'sarif'
           output: 'trivy-results.sarif'
+          vuln-type: 'os,library'
+          severity: 'HIGH,CRITICAL'
+          exit-code: '1'  
+          ignore-unfixed: false
         
       - name: Enviar resultados do Trivy para a aba de Segurança do Github
         uses: actions/upload-artifact@v4
@@ -43,15 +50,14 @@ jobs:
   push-image:
     runs-on: ubuntu-latest
     needs: scan-image
+    if: success()
 
     steps:
       - name: Fazer login no Docker Hub
         run: echo "${{ secrets.DOCKER_HUB_PASSWD }}" | docker login -u ${{ secrets.DOCKER_HUB_USER }} --password-stdin
     
       - name: Enviar imagem Docker
-        run: |
-          docker push mmayumi/fastapi-app:latest
-          docker push mmayumi/fastapi-app:v${{ github.run_number }}
+        run: docker push mmayumi/fastapi-app:latest
         
       - name: Fazer logout do Docker Hub
         run: docker logout
