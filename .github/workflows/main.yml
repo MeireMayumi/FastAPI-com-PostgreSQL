@@ -21,6 +21,15 @@ jobs:
 
     - name: Tag da imagem Docker com número de execução do GitHub
       run: docker tag mmayumi/fastapi-app:latest mmayumi/fastapi-app:v${{ github.run_number }}
+
+    - name: Verificar se a tag latest existe
+      run: |
+        if docker images | grep -q "mmayumi/fastapi-app *latest"; then
+          echo "A tag latest existe localmente."
+        else
+          echo "A tag latest não existe localmente."
+          exit 1  # Faz com que o workflow falhe
+        fi
       
     - name: Enviar imagem Docker
       run: |
