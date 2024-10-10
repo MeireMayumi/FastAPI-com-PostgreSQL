@@ -16,36 +16,83 @@ jobs:
     - name: Fazer login no Docker Hub
       run: echo "${{ secrets.DOCKER_HUB_PASSWD }}" | docker login -u ${{ secrets.DOCKER_HUB_USER }} --password-stdin
 
-    - name: Instalar Docker Compose
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y docker-compose
-        
     - name: Construir imagem Docker
-      run: docker-compose build
+      run: docker build -t mmayumi/fastapi-app:latest .
 
-    - name: Tag da imagem Docker
+    - name: Tag da imagem Docker com número de execução do GitHub
+      run: docker tag mmayumi/fastapi-app:latest mmayumi/fastapi-app:v${{ github.run_number }}
+
+    - name: Salvar a imagem como artefato
       run: |
-        docker tag fastapi-com-postgresql_fastapi:latest mmayumi/fastapi-app:latest
-        docker tag fastapi-com-postgresql_fastapi:latest mmayumi/fastapi-app:v${{ github.run_number }}
+       docker save mmayumi/fastapi-app:latest -o app-latest.tar
+       docker save mmayumi/fastapi-app:v${{ github.run_number }} -o app-v${{ github.run_number }}.tar
 
-    - name: Enviar imagem Docker
-      run: |
-        docker push mmayumi/fastapi-app:latest
-        docker push mmayumi/fastapi-app:v${{ github.run_number }}
+    - name: Enviar as imagens como artefato 
+      uses: actions/upload-artifact@v3
+      with:
+        name: imagem-docker
+        path: |
+          app-latest.tar
+          app-v${{ github.run_number }}.tar
+        
+  scan-image:
+    runs-on: ubuntu-latest
+    needs: build
 
-    - name: Escanear vulnerabilidades com Trivy
-      uses: aquasecurity/trivy-action@0.20.0
-      with:
-        image-ref: 'docker.io/mmayumi/fastapi-app:v${{ github.run_number }}'
-        format: 'sarif'
-        output: 'trivy-results.sarif'
+    steps:
+
+      - name: Baixar as imagens
+        uses: actions/download-artifact@v3
+        with:
+          name: imagem-docker
+          path: ./  
+
+      - name: Carregar as imagens
+        run: |
+          docker load -i app-latest.tar
+          docker load -i app-v${{ github.run_number }}.tar
+          
+      - name: Escanear vulnerabilidades com Trivy
+        uses: aquasecurity/trivy-action@0.20.0
+        with:
+          image-ref: 'docker.io/mmayumi/fastapi-app:v${{ github.run_number }}'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          vuln-type: 'os,library'
+          severity: 'HIGH,CRITICAL'
+          exit-code: '1'  
+          ignore-unfixed: false
         
-    - name: Enviar resultados do Trivy para a aba de Segurança do Github
-      uses: actions/upload-artifact@v4
-      with:
-        name: trivy-results
-        path: trivy-results.sarif
+      - name: Enviar resultados do Trivy para a aba de Segurança do Github
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-results
+          path: trivy-results.sarif
+
+  push-image:
+    runs-on: ubuntu-latest
+    needs: scan-image
+    if: success()
+
+    steps:
+      - name: Fazer login no Docker Hub
+        run: echo "${{ secrets.DOCKER_HUB_PASSWD }}" | docker login -u ${{ secrets.DOCKER_HUB_USER }} --password-stdin
+
+      - name: Baixar as imagens
+        uses: actions/download-artifact@v3
+        with:
+          name: imagem-docker
+          path: ./ 
+      
+      - name: Carregar as imagens
+        run: |
+          docker load -i app-latest.tar
+          docker load -i app-v${{ github.run_number }}.tar
+          
+      - name: Enviar imagem Docker
+        run: |
+          docker push mmayumi/fastapi-app:latest
+          docker push mmayumi/fastapi-app:v${{ github.run_number }}
         
-    - name: Fazer logout do Docker Hub
-      run: docker logout
+      - name: Fazer logout do Docker Hub
+        run: docker logout
