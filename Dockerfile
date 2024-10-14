@@ -11,10 +11,8 @@ WORKDIR /app
 COPY requirements.txt requirements.txt
 
 # Instalar dependências
-RUN apk add --no-cache gcc musl-dev postgresql-dev netcat-openbsd bash curl
-
-# Instalar dependências do Python 
-RUN pip install --no-cache-dir -r requirements.txt
+RUN apk add --no-cache bash curl gcc musl-dev netcat-openbsd postgresql-dev \
+&& pip install --no-cache-dir -r requirements.txt     
 
 # Copiar todos o arquivos da aplicação
 COPY . /app 
@@ -26,7 +24,7 @@ RUN chmod +x /app/wait-for-it.sh
 USER fastapi
 
 # Adicionar um health check
-HEALTHCHECK CMD curl --fail http://localhost:8000/ || exit 1
+HEALTHCHECK CMD ["curl", "--fail", "http://localhost:8000/"]
 
 # Comando para executar a aplicação
 CMD ["/app/wait-for-it.sh", "db", "--", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

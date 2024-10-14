@@ -13,6 +13,9 @@ load_dotenv()
 #Criação da instância da Aplicação FastAPI
 app = FastAPI()
 
+# Constante para o status "Aluno não encontrado"
+ALUNO_NAO_ENCONTRADO = "Aluno não encontrado"
+
 #Modelo que define a tabela alunos
 class AlunoDB(Base):
     __tablename__ = "alunos"
@@ -63,7 +66,7 @@ def read_alunos(db: Session = Depends(get_db)):
 def read_aluno(aluno_id: int, db: Session = Depends(get_db)):
     aluno = db.query(AlunoDB).filter(AlunoDB.id == aluno_id).first()
     if aluno is None:
-        raise HTTPException(status_code=404, detail="Aluno não encontrado")
+        raise HTTPException(status_code=404, detail=ALUNO_NAO_ENCONTRADO)
     return Aluno.from_orm(aluno)
 
 #Atualização de informações um aluno exustente
@@ -71,7 +74,7 @@ def read_aluno(aluno_id: int, db: Session = Depends(get_db)):
 def update_aluno(aluno_id: int, aluno_update: Aluno, db: Session = Depends(get_db)):
     aluno = db.query(AlunoDB).filter(AlunoDB.id == aluno_id).first()
     if aluno is None:
-        raise HTTPException(status_code=404, detail="Aluno não encontrado")
+        raise HTTPException(status_code=404, detail=ALUNO_NAO_ENCONTRADO)
     aluno.nome = aluno_update.nome
     aluno.email = aluno_update.email
     db.commit()
@@ -83,7 +86,7 @@ def update_aluno(aluno_id: int, aluno_update: Aluno, db: Session = Depends(get_d
 def delete_aluno(aluno_id: int, db: Session = Depends(get_db)):
     aluno = db.query(AlunoDB).filter(AlunoDB.id == aluno_id).first()
     if aluno is None:
-        raise HTTPException(status_code=404, detail="Aluno não encontrado")
+        raise HTTPException(status_code=404, detail=ALUNO_NAO_ENCONTRADO)
     db.delete(aluno)
     db.commit()
     return Aluno.from_orm(aluno)
